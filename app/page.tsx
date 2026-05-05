@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getFriendlyErrorMessage } from "@/lib/friendlyError";
 
 type Product = {
   id: number;
@@ -40,7 +41,7 @@ export default function Home() {
       .select("product, stock");
 
     if (error) {
-      setLoadingText(`재고 조회 실패: ${error.message}`);
+      setLoadingText(getFriendlyErrorMessage(error));
       setStocks(DEFAULT_STOCKS);
       return;
     }
@@ -156,7 +157,7 @@ export default function Home() {
                 gap: "10px",
                 flexWrap: "wrap",
                 width: "100%",
-                maxWidth: "420px",
+                maxWidth: "520px",
               }}
             >
               <Link href="/" style={navButtonStyle}>
@@ -165,12 +166,31 @@ export default function Home() {
               <Link href="/order" style={navButtonStyle}>
                 주문하기
               </Link>
+              <Link href="/check-order" style={navButtonStyle}>
+                주문조회
+              </Link>
               <Link href="/admin" style={navButtonStyle}>
                 관리자
               </Link>
             </nav>
           </div>
         </header>
+
+        {loadingText && (
+          <section
+            style={{
+              backgroundColor: "#fffdf7",
+              border: "2px solid #d8cfb0",
+              borderRadius: "20px",
+              padding: "14px 18px",
+              marginBottom: "18px",
+              fontSize: "18px",
+              fontWeight: 700,
+            }}
+          >
+            {loadingText}
+          </section>
+        )}
 
         <section
           style={{
@@ -223,22 +243,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-        {loadingText && (
-          <section
-            style={{
-              backgroundColor: "#fffdf7",
-              border: "2px solid #d8cfb0",
-              borderRadius: "20px",
-              padding: "14px 18px",
-              marginBottom: "18px",
-              fontSize: "18px",
-              fontWeight: 700,
-            }}
-          >
-            {loadingText}
-          </section>
-        )}
 
         <section>
           <h2
