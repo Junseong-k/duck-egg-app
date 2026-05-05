@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getFriendlyErrorMessage } from "@/lib/friendlyError";
 
 type OrderResult = {
   order_number: string;
@@ -44,7 +45,7 @@ export default function CheckOrderPage() {
       .maybeSingle();
 
     if (error) {
-      setMessage(`조회 실패: ${error.message}`);
+      setMessage(getFriendlyErrorMessage(error));
       setLoading(false);
       return;
     }
