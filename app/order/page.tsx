@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { getFriendlyErrorMessage } from "@/lib/friendlyError";
 
 type StockRow = {
   product: string;
@@ -26,7 +27,7 @@ const PRODUCT_OPTIONS = [
   "훈제 오리알 세트",
 ];
 
-export default function OrderPage() {
+function OrderPageContent() {
   const searchParams = useSearchParams();
   const productFromQuery = searchParams.get("product") || "유정 오리알 10구";
 
@@ -51,7 +52,7 @@ export default function OrderPage() {
       .select("product, stock");
 
     if (error) {
-      setLoadingText(`재고 조회 실패: ${error.message}`);
+      setLoadingText(getFriendlyErrorMessage(error));
       setStocks(DEFAULT_STOCKS);
       return;
     }
@@ -162,7 +163,7 @@ export default function OrderPage() {
     ]);
 
     if (insertError) {
-      setMessage(`주문 저장 실패: ${insertError.message}`);
+      setMessage(getFriendlyErrorMessage(insertError));
       setOrderNumber("");
       setIsSubmitting(false);
       return;
@@ -177,7 +178,7 @@ export default function OrderPage() {
       .eq("product", selectedProduct);
 
     if (stockError) {
-      setMessage(`재고 차감 실패: ${stockError.message}`);
+      setMessage(getFriendlyErrorMessage(stockError));
       setOrderNumber("");
       setIsSubmitting(false);
       return;
@@ -260,7 +261,7 @@ export default function OrderPage() {
                 gap: "10px",
                 flexWrap: "wrap",
                 width: "100%",
-                maxWidth: "420px",
+                maxWidth: "520px",
               }}
             >
               <Link href="/" style={navButtonStyle}>
@@ -268,6 +269,9 @@ export default function OrderPage() {
               </Link>
               <Link href="/order" style={navButtonStyle}>
                 주문하기
+              </Link>
+              <Link href="/check-order" style={navButtonStyle}>
+                주문조회
               </Link>
               <Link href="/admin" style={navButtonStyle}>
                 관리자
@@ -524,6 +528,31 @@ export default function OrderPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function OrderPage() {
+  return (
+    <Suspense
+      fallback={
+        <main
+          style={{
+            minHeight: "100vh",
+            backgroundColor: "#f7f1dc",
+            color: "#222222",
+            padding: "20px 14px 50px",
+          }}
+        >
+          <div style={{ maxWidth: "920px", margin: "0 auto" }}>
+            <section style={sectionBoxStyle}>
+              <h2 style={sectionTitleStyle}>주문 페이지를 불러오는 중입니다...</h2>
+            </section>
+          </div>
+        </main>
+      }
+    >
+      <OrderPageContent />
+    </Suspense>
   );
 }
 
