@@ -44,7 +44,162 @@ const PRODUCT_NAMES = [
   "훈제 오리알 세트",
 ];
 
+const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "";
+
 export default function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [loginMessage, setLoginMessage] = useState("");
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem("admin-auth");
+    if (saved === "ok") {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogin = () => {
+    if (!ADMIN_PASSWORD) {
+      setLoginMessage("관리자 비밀번호가 아직 설정되지 않았습니다.");
+      return;
+    }
+
+    if (passwordInput === ADMIN_PASSWORD) {
+      sessionStorage.setItem("admin-auth", "ok");
+      setIsAuthenticated(true);
+      setLoginMessage("");
+      return;
+    }
+
+    setLoginMessage("비밀번호가 맞지 않습니다.");
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("admin-auth");
+    setIsAuthenticated(false);
+    setPasswordInput("");
+    setLoginMessage("");
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "#f7f1dc",
+          color: "#222222",
+          padding: "20px 14px 50px",
+        }}
+      >
+        <div style={{ maxWidth: "700px", margin: "0 auto" }}>
+          <header
+            style={{
+              backgroundColor: "#fffdf7",
+              border: "2px solid #d8cfb0",
+              borderRadius: "20px",
+              padding: "20px",
+              marginBottom: "18px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "16px",
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <h1
+                  style={{
+                    margin: "0 0 10px 0",
+                    fontSize: "clamp(28px, 5vw, 34px)",
+                    lineHeight: "1.25",
+                    fontWeight: 800,
+                  }}
+                >
+                  관리자 로그인
+                </h1>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "clamp(17px, 3.8vw, 20px)",
+                    lineHeight: "1.6",
+                    color: "#444444",
+                    fontWeight: 600,
+                  }}
+                >
+                  관리자 비밀번호를 입력해 주세요.
+                </p>
+              </div>
+
+              <nav
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                  flexWrap: "wrap",
+                  width: "100%",
+                  maxWidth: "520px",
+                }}
+              >
+                <Link href="/" style={navButtonStyle}>
+                  홈
+                </Link>
+                <Link href="/order" style={navButtonStyle}>
+                  주문하기
+                </Link>
+                <Link href="/check-order" style={navButtonStyle}>
+                  주문조회
+                </Link>
+              </nav>
+            </div>
+          </header>
+
+          <section style={sectionBoxStyle}>
+            <h2 style={sectionTitleStyle}>관리자 페이지 보호</h2>
+
+            <div style={{ display: "grid", gap: "16px" }}>
+              <div>
+                <label style={labelStyle}>비밀번호</label>
+                <input
+                  type="password"
+                  placeholder="관리자 비밀번호 입력"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  style={inputStyle}
+                />
+              </div>
+
+              <button onClick={handleLogin} style={orderButtonStyle}>
+                관리자 로그인
+              </button>
+
+              {loginMessage && (
+                <div
+                  style={{
+                    padding: "14px",
+                    borderRadius: "14px",
+                    backgroundColor: "#fff1f1",
+                    color: "#8b0000",
+                    fontSize: "18px",
+                    fontWeight: 700,
+                  }}
+                >
+                  {loginMessage}
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  return <AdminDashboard onLogout={handleLogout} />;
+}
+
+function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [stocks, setStocks] = useState<StockMap>(DEFAULT_STOCKS);
   const [stockInputs, setStockInputs] = useState<StockMap>(DEFAULT_STOCKS);
@@ -393,7 +548,7 @@ export default function AdminPage() {
                 gap: "10px",
                 flexWrap: "wrap",
                 width: "100%",
-                maxWidth: "520px",
+                maxWidth: "640px",
               }}
             >
               <Link href="/" style={navButtonStyle}>
@@ -405,9 +560,9 @@ export default function AdminPage() {
               <Link href="/check-order" style={navButtonStyle}>
                 주문조회
               </Link>
-              <Link href="/admin" style={navButtonStyle}>
-                관리자
-              </Link>
+              <button onClick={onLogout} style={actionButtonStyle}>
+                로그아웃
+              </button>
             </nav>
           </div>
         </header>
@@ -467,12 +622,7 @@ export default function AdminPage() {
         <section style={sectionBoxStyle}>
           <h2 style={sectionTitleStyle}>현재 재고 관리</h2>
 
-          <div
-            style={{
-              display: "grid",
-              gap: "14px",
-            }}
-          >
+          <div style={{ display: "grid", gap: "14px" }}>
             {PRODUCT_NAMES.map((product) => (
               <div
                 key={product}
@@ -998,4 +1148,19 @@ const orderInfoValueStyle: React.CSSProperties = {
   lineHeight: "1.5",
   color: "#111111",
   wordBreak: "break-word",
+};
+
+const orderButtonStyle: React.CSSProperties = {
+  display: "block",
+  width: "100%",
+  textAlign: "center",
+  padding: "18px 14px",
+  borderRadius: "16px",
+  backgroundColor: "#2f5d3a",
+  border: "2px solid #2f5d3a",
+  color: "#ffffff",
+  fontSize: "clamp(22px, 5vw, 26px)",
+  fontWeight: 800,
+  cursor: "pointer",
+  boxSizing: "border-box",
 };
